@@ -13,7 +13,7 @@ const { engine } = require("express-handlebars");
 const fs = require("fs").promises;
 
 const app = express();
-const port = process.env.port || 3000;
+const port = process.env.PORT || 3000;
 
 // Middleware to parse form data
 app.use(express.urlencoded({ extended: true }));
@@ -38,28 +38,77 @@ app.engine(
       isEmpty: function (value) {
         return !value || value.toString().trim() === "";
       },
+      // Helper to get first photo or default
+      getFirstPhoto: function (photos) {
+        if (photos && photos.length > 0) {
+          return photos[0];
+        }
+        return "/images/no-image.jpg";
+      },
+      // Helper to truncate description
+      truncateDescription: function (description, length) {
+        if (!description) return "No description available";
+        if (description.length <= length) return description;
+        return description.substring(0, length) + "...";
+      }
     },
   })
 );
 app.set("view engine", "hbs");
 app.set('views', path.join(__dirname, 'views'));
 
-// Load Airbnb data
+// Sample data fallback (in case JSON file fails to load)
+const sampleData = [
+  {
+    _id: "1",
+    NAME: "Sample Property 1",
+    price: "$100",
+    neighbourhood: "Sample Area",
+    property_type: "Apartment",
+    description: "This is a sample property description.",
+    photos: []
+  },
+  {
+    _id: "2",
+    NAME: "Sample Property 2",
+    price: "$150",
+    neighbourhood: "Another Area",
+    property_type: "House",
+    description: "Another sample property for testing.",
+    photos: []
+  }
+];
+
+// Load Airbnb data with better error handling
 let airbnbData = [];
+
 async function loadData() {
   try {
-    const data = await fs.readFile("airbnb_with_photos.json", "utf8");
+    console.log('Current directory:', process.cwd());
+    console.log('Files in directory:', await fs.readdir(process.cwd()));
+    
+    const filePath = path.join(process.cwd(), 'airbnb_with_photos.json');
+    console.log('Looking for file at:', filePath);
+    
+    const data = await fs.readFile(filePath, 'utf8');
     airbnbData = JSON.parse(data);
-    console.log(`Loaded ${airbnbData.length} records`);
+    console.log(`Successfully loaded ${airbnbData.length} records from JSON file`);
   } catch (error) {
-    console.error("Error loading data:", error);
+    console.error("Error loading JSON data file:", error.message);
+    console.log("Using sample data instead");
+    airbnbData = sampleData;
   }
 }
+
+// Initialize data
 loadData();
 
 // Home route
 app.get("/", function (req, res) {
-  res.render("index", { title: "Airbnb Property Explorer" });
+  res.render("index", { 
+    title: "Airbnb Property Explorer",
+    featuredCount: airbnbData.length > 2 ? airbnbData.length : 2
+  });
 });
 
 // Users route
@@ -69,22 +118,47 @@ app.get("/users", function (req, res) {
 
 // Step 8: View all data route
 app.get("/viewData", (req, res) => {
-  const dataToShow = airbnbData.slice(0, 100); // Show first 100 records
+  const page = parseInt(req.query.page) || 1;
+  const limit = 20;
+  const startIndex = (page - 1) * limit;
+  const endIndex = startIndex + limit;
+  
+  const dataToShow = airbnbData.slice(startIndex, endIndex);
+  const totalPages = Math.ceil(airbnbData.length / limit);
+  
   res.render("viewData", {
     title: "All Airbnb Properties",
     data: dataToShow,
+    currentPage: page,
+    totalPages: totalPages,
+    hasNextPage: page < totalPages,
+    hasPrevPage: page > 1,
+    nextPage: page + 1,
+    prevPage: page - 1
   });
 });
 
 // Step 9: Clean data route (remove empty names)
 app.get("/viewData/clean", (req, res) => {
-  const cleanData = airbnbData
-    .filter((item) => item.NAME && item.NAME.trim() !== "")
-    .slice(0, 100);
-
+  const page = parseInt(req.query.page) || 1;
+  const limit = 20;
+  const startIndex = (page - 1) * limit;
+  const endIndex = startIndex + limit;
+  
+  const cleanData = airbnbData.filter((item) => item.NAME && item.NAME.trim() !== "");
+  const dataToShow = cleanData.slice(startIndex, endIndex);
+  const totalPages = Math.ceil(cleanData.length / limit);
+  
   res.render("viewData", {
     title: "Cleaned Airbnb Data",
-    data: cleanData,
+    data: dataToShow,
+    currentPage: page,
+    totalPages: totalPages,
+    hasNextPage: page < totalPages,
+    hasPrevPage: page > 1,
+    nextPage: page + 1,
+    prevPage: page - 1,
+    isClean: true
   });
 });
 
@@ -99,28 +173,53 @@ app.get("/viewData/price", (req, res) => {
 app.post("/viewData/price/results", (req, res) => {
   const minPrice = parseFloat(req.body.minPrice) || 0;
   const maxPrice = parseFloat(req.body.maxPrice) || 10000;
+  const page = parseInt(req.query.page) || 1;
+  const limit = 20;
+  const startIndex = (page - 1) * limit;
+  const endIndex = startIndex + limit;
 
-  const results = airbnbData
-    .filter((item) => {
-      const price = parseFloat(item.price?.replace("$", "")) || 0;
-      return price >= minPrice && price <= maxPrice;
-    })
-    .slice(0, 100);
+  const results = airbnbData.filter((item) => {
+    const price = parseFloat(item.price?.toString().replace("$", "").replace(",", "")) || 0;
+    return price >= minPrice && price <= maxPrice;
+  });
+
+  const paginatedResults = results.slice(startIndex, endIndex);
+  const totalPages = Math.ceil(results.length / limit);
 
   res.render("priceResults", {
     title: "Price Range Results",
-    results: results,
+    results: paginatedResults,
     minPrice: minPrice,
     maxPrice: maxPrice,
+    currentPage: page,
+    totalPages: totalPages,
+    hasNextPage: page < totalPages,
+    hasPrevPage: page > 1,
+    nextPage: page + 1,
+    prevPage: page - 1,
+    totalResults: results.length
   });
 });
 
 // Assignment 1 routes recreated with Handlebars
 app.get("/allData", (req, res) => {
-  const dataToShow = airbnbData.slice(0, 50);
+  const page = parseInt(req.query.page) || 1;
+  const limit = 20;
+  const startIndex = (page - 1) * limit;
+  const endIndex = startIndex + limit;
+  
+  const dataToShow = airbnbData.slice(startIndex, endIndex);
+  const totalPages = Math.ceil(airbnbData.length / limit);
+
   res.render("allData", {
     title: "All Data - Assignment 1",
     data: dataToShow,
+    currentPage: page,
+    totalPages: totalPages,
+    hasNextPage: page < totalPages,
+    hasPrevPage: page > 1,
+    nextPage: page + 1,
+    prevPage: page - 1
   });
 });
 
@@ -134,19 +233,78 @@ app.get("/search/propertyLine", (req, res) => {
 // Search results
 app.get("/search/propertyLine/results", (req, res) => {
   const searchTerm = req.query.searchTerm?.toLowerCase() || "";
-  const results = airbnbData
-    .filter(
-      (item) =>
-        item.NAME?.toLowerCase().includes(searchTerm) ||
-        item.neighbourhood?.toLowerCase().includes(searchTerm) ||
-        item.property_type?.toLowerCase().includes(searchTerm)
-    )
-    .slice(0, 50);
+  const page = parseInt(req.query.page) || 1;
+  const limit = 20;
+  const startIndex = (page - 1) * limit;
+  const endIndex = startIndex + limit;
+
+  const results = airbnbData.filter(
+    (item) =>
+      item.NAME?.toLowerCase().includes(searchTerm) ||
+      item.neighbourhood?.toLowerCase().includes(searchTerm) ||
+      item.property_type?.toLowerCase().includes(searchTerm)
+  );
+
+  const paginatedResults = results.slice(startIndex, endIndex);
+  const totalPages = Math.ceil(results.length / limit);
 
   res.render("searchResults", {
     title: "Search Results",
     searchTerm,
-    results,
+    results: paginatedResults,
+    currentPage: page,
+    totalPages: totalPages,
+    hasNextPage: page < totalPages,
+    hasPrevPage: page > 1,
+    nextPage: page + 1,
+    prevPage: page - 1,
+    totalResults: results.length
+  });
+});
+
+// Debug route to check data loading
+app.get("/debug", async (req, res) => {
+  try {
+    const files = await fs.readdir(process.cwd());
+    let fileInfo = {};
+    
+    try {
+      const stats = await fs.stat(path.join(process.cwd(), 'airbnb_with_photos.json'));
+      fileInfo = {
+        exists: true,
+        size: `${(stats.size / 1024 / 1024).toFixed(2)} MB`,
+        lastModified: stats.mtime
+      };
+    } catch (error) {
+      fileInfo = {
+        exists: false,
+        error: error.message
+      };
+    }
+    
+    res.json({
+      currentDir: process.cwd(),
+      files: files,
+      jsonFile: fileInfo,
+      dataLoaded: airbnbData.length,
+      isSampleData: airbnbData === sampleData,
+      nodeVersion: process.version
+    });
+  } catch (error) {
+    res.json({
+      error: error.message,
+      dataLoaded: airbnbData.length,
+      isSampleData: airbnbData === sampleData
+    });
+  }
+});
+
+// Health check route
+app.get("/health", (req, res) => {
+  res.json({ 
+    status: "OK", 
+    dataCount: airbnbData.length,
+    timestamp: new Date().toISOString()
   });
 });
 
@@ -155,6 +313,17 @@ app.use((req, res) => {
   res.status(404).render("error", {
     title: "Error",
     message: "Page Not Found",
+    error: { status: 404 }
+  });
+});
+
+// Error handler
+app.use((err, req, res, next) => {
+  console.error(err.stack);
+  res.status(500).render("error", {
+    title: "Error",
+    message: "Something went wrong!",
+    error: process.env.NODE_ENV === 'production' ? {} : err
   });
 });
 
