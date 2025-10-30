@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>{{title}}</title>
+  <style>
+    .properties-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(450px, 1fr));
+      gap: 20px;
+      margin-top: 20px;
+    }
+    .property-card {
+      border: 1px solid #ddd;
+      padding: 20px;
+      border-radius: 8px;
+      background-color: #f9f9f9;
+      text-align: center;
+    }
+    .property-field {
+      margin: 10px 0;
+      padding: 8px;
+      background-color: white;
+      border-left: 3px solid #007bff;
+      padding-left: 15px;
+    }
+    .property-field strong {
+      color: #555;
+    }
+    img {
+      max-width: 100%;
+      height: auto;
+      border-radius: 8px;
+      margin: 15px 0;
+    }
+    a { 
+      color: #007bff; 
+      text-decoration: none; 
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>{{title}}</h1>
+    <p>Displaying <strong>{{data.length}}</strong> properties from Assignment 1</p>
+
+    <div class="properties-grid">
+      {{#each data}}
+        <div class="property-card">
+          <img src="{{this.thumbnail}}" alt="{{this.NAME}}">
+          <h3>
+            {{#if this.NAME}}
+              {{this.NAME}}
+            {{else}}
+              <span style="color: red;">No Name Available</span>
+            {{/if}}
+          </h3>
+          <div class="property-field"><strong>Price:</strong> {{this.price}}</div>
+          <div class="property-field"><strong>Type:</strong> {{this.[room type]}}</div>
+          <div class="property-field"><strong>Location:</strong> {{this.neighbourhood}}, {{this.[neighbourhood group]}}</div>
+          <div class="property-field"><strong>Rating:</strong> {{this.[review rate number]}}/5 ({{this.[number of reviews]}} reviews)</div>
+        </div>
+      {{/each}}
+    </div>
+  </div>
+</body>
+</html>

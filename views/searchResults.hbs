@@ -1,0 +1,28 @@
+<h1>{{title}}</h1>
+
+{{#if searchTerm}}
+    <p>Search results for: "<strong>{{searchTerm}}</strong>"</p>
+{{/if}}
+
+<p>Found {{results.length}} properties</p>
+
+{{#if results.length}}
+    <div class="search-results">
+        {{#each results}}
+            <div class="result-item">
+                <img src="{{this.thumbnail}}" alt="{{this.NAME}}" width="150">
+                <div class="result-info">
+                    <h3>{{this.NAME}}</h3>
+                    <p><strong>Type:</strong> {{this.[room type]}}</p>
+                    <p><strong>Location:</strong> {{this.neighbourhood}}</p>
+                    <p><strong>Price:</strong> {{this.price}}</p>
+                    <p><strong>Rating:</strong> {{this.[review rate number]}}/5</p>
+                </div>
+            </div>
+        {{/each}}
+    </div>
+{{else}}
+    <p>No properties found matching your search criteria.</p>
+{{/if}}
+
+<a href="/search/propertyLine">← Back to Search</a>

@@ -1,0 +1,21 @@
+<h1>{{title}}</h1>
+
+<form action="/viewData/price/results" method="POST">
+    <div class="form-group">
+        <label for="minPrice">Minimum Price:</label>
+        <input type="number" id="minPrice" name="minPrice"
+               placeholder="0" min="0" step="1" required>
+    </div>
+
+    <div class="form-group">
+        <label for="maxPrice">Maximum Price:</label>
+        <input type="number" id="maxPrice" name="maxPrice"
+               placeholder="1000" min="0" step="1" required>
+    </div>
+
+    <button type="submit">Search</button>
+</form>
+
+<div style="margin-top: 2rem;">
+    <a href="/viewData">← Back to All Data</a>
+</div>

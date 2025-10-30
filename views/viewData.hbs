@@ -1,0 +1,37 @@
+<h1>{{title}}</h1>
+<p>Showing {{data.length}} properties</p>
+
+<table>
+    <thead>
+    <tr>
+        <th>Image</th>
+        <th>ID</th>
+        <th>Name</th>
+        <th>Neighbourhood</th>
+        <th>Room Type</th>
+        <th>Price</th>
+        <th>Rating</th>
+    </tr>
+    </thead>
+    <tbody>
+    {{#each data}}
+        <tr>
+            <td>
+                <img src="{{this.thumbnail}}" alt="{{this.NAME}}" width="100" height="75">
+            </td>
+            <td>{{this.id}}</td>
+            <td>
+                {{#if this.NAME}}
+                    {{this.NAME}}
+                {{else}}
+                    <span style="color: red; font-weight: bold;">N/A</span>
+                {{/if}}
+            </td>
+            <td>{{this.neighbourhood}}</td>
+            <td>{{this.[room type]}}</td>
+            <td>${{formatPrice this.price}}</td>
+            <td>{{this.[review rate number]}}/5</td>
+        </tr>
+    {{/each}}
+    </tbody>
+</table>
