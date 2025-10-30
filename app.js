@@ -46,14 +46,15 @@ app.set('views', path.join(__dirname, 'views'));
 
 // Load Airbnb data
 let airbnbData = [];
-try {
-    airbnbData = require('./airbnb_with_photos.json');
-    console.log(`✅ Loaded ${airbnbData.length} records`);
-} catch (error) {
-    console.error('Error loading data:', error);
-    airbnbData = [];
+async function loadData() {
+  try {
+    const data = await fs.readFile("airbnb_with_photos.json", "utf8");
+    airbnbData = JSON.parse(data);
+    console.log(`Loaded ${airbnbData.length} records`);
+  } catch (error) {
+    console.error("Error loading data:", error);
+  }
 }
-
 loadData();
 
 // Home route
