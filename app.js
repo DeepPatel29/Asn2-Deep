@@ -119,7 +119,7 @@ app.get("/users", function (req, res) {
 // Step 8: View all data route
 app.get("/viewData", (req, res) => {
   const page = parseInt(req.query.page) || 1;
-  const limit = 20;
+  const limit = 100;
   const startIndex = (page - 1) * limit;
   const endIndex = startIndex + limit;
   
@@ -141,7 +141,7 @@ app.get("/viewData", (req, res) => {
 // Step 9: Clean data route (remove empty names)
 app.get("/viewData/clean", (req, res) => {
   const page = parseInt(req.query.page) || 1;
-  const limit = 20;
+  const limit = 100;
   const startIndex = (page - 1) * limit;
   const endIndex = startIndex + limit;
   
@@ -174,7 +174,7 @@ app.post("/viewData/price/results", (req, res) => {
   const minPrice = parseFloat(req.body.minPrice) || 0;
   const maxPrice = parseFloat(req.body.maxPrice) || 10000;
   const page = parseInt(req.query.page) || 1;
-  const limit = 20;
+  const limit = 100;
   const startIndex = (page - 1) * limit;
   const endIndex = startIndex + limit;
 
@@ -204,7 +204,7 @@ app.post("/viewData/price/results", (req, res) => {
 // Assignment 1 routes recreated with Handlebars
 app.get("/allData", (req, res) => {
   const page = parseInt(req.query.page) || 1;
-  const limit = 20;
+  const limit = 100;
   const startIndex = (page - 1) * limit;
   const endIndex = startIndex + limit;
   
@@ -234,7 +234,7 @@ app.get("/search/propertyLine", (req, res) => {
 app.get("/search/propertyLine/results", (req, res) => {
   const searchTerm = req.query.searchTerm?.toLowerCase() || "";
   const page = parseInt(req.query.page) || 1;
-  const limit = 20;
+  const limit = 100;
   const startIndex = (page - 1) * limit;
   const endIndex = startIndex + limit;
 
